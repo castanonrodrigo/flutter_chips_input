@@ -52,6 +52,7 @@ class ChipsInput<T> extends StatefulWidget {
     this.allowChipEditing = false,
     this.focusNode,
     this.keepSuggestionsBoxAfterChange = false,
+    this.initialSuggestions,
   })  : assert(maxChips == null || initialValue.length <= maxChips),
         super(key: key);
 
@@ -78,6 +79,7 @@ class ChipsInput<T> extends StatefulWidget {
   final bool allowChipEditing;
   final FocusNode focusNode;
   final bool keepSuggestionsBoxAfterChange;
+  final List<T> initialSuggestions;
 
   // final Color cursorColor;
 
@@ -125,6 +127,9 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   void initState() {
     super.initState();
     _chips.addAll(widget.initialValue);
+    _suggestions = widget.initialSuggestions
+        ?.where((r) => !_chips.contains(r))
+        ?.toList(growable: false);
     // _focusAttachment = _focusNode.attach(context);
     _suggestionsBoxController = SuggestionsBoxController(context);
 
@@ -195,6 +200,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
 
         return StreamBuilder<List<T>>(
           stream: _suggestionsStreamController.stream,
+          initialData: _suggestions,
           builder: (context, snapshot) {
             if (snapshot.hasData && snapshot.data.isNotEmpty) {
               var suggestionsListView = Material(
