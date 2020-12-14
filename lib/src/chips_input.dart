@@ -51,6 +51,7 @@ class ChipsInput<T> extends StatefulWidget {
     this.autofocus = false,
     this.allowChipEditing = false,
     this.focusNode,
+    this.keepSuggestionsBoxAfterChange = false,
     this.initialSuggestions,
   })  : assert(maxChips == null || initialValue.length <= maxChips),
         super(key: key);
@@ -77,6 +78,7 @@ class ChipsInput<T> extends StatefulWidget {
   final bool autofocus;
   final bool allowChipEditing;
   final FocusNode focusNode;
+  final bool keepSuggestionsBoxAfterChange;
   final List<T> initialSuggestions;
 
   // final Color cursorColor;
@@ -243,7 +245,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
     );
   }
 
-  void selectSuggestion(T data) {
+  void selectSuggestion(T data) async {
     if (!_hasReachedMaxChips) {
       _chips.add(data);
       if (widget.allowChipEditing) {
@@ -252,7 +254,13 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
       }
       _updateTextInputState(replaceText: true);
 
-      _suggestions = null;
+      if (widget.keepSuggestionsBoxAfterChange) {
+        final results = await widget.findSuggestions('');
+        _suggestions =
+            results.where((e) => !_chips.contains(e)).toList(growable: false);
+      } else {
+        _suggestions = null;
+      }
       _suggestionsStreamController.add(_suggestions);
       if (widget.maxChips == _chips.length) _suggestionsBoxController.close();
     } else {
@@ -261,10 +269,17 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
     widget.onChanged(_chips.toList(growable: false));
   }
 
-  void deleteChip(T data) {
+  void deleteChip(T data) async {
     if (widget.enabled) {
       _chips.remove(data);
       if (_enteredTexts.containsKey(data)) _enteredTexts.remove(data);
+      if (widget.keepSuggestionsBoxAfterChange) {
+        final results =
+            await widget.findSuggestions(_value.normalCharactersText);
+        _suggestions =
+            results.where((r) => !_chips.contains(r)).toList(growable: false);
+        _suggestionsStreamController.add(_suggestions);
+      }
       _updateTextInputState();
       widget.onChanged(_chips.toList(growable: false));
     }
