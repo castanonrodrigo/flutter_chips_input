@@ -127,9 +127,6 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   void initState() {
     super.initState();
     _chips.addAll(widget.initialValue);
-    _suggestions = widget.initialSuggestions
-        ?.where((r) => !_chips.contains(r))
-        ?.toList(growable: false);
     // _focusAttachment = _focusNode.attach(context);
     _suggestionsBoxController = SuggestionsBoxController(context);
 
@@ -167,6 +164,9 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
   void _handleFocusChanged() {
     if (_focusNode.hasFocus) {
       _openInputConnection();
+      _suggestions = widget.initialSuggestions
+          ?.where((r) => !_chips.contains(r))
+          ?.toList(growable: false);
       _suggestionsBoxController.open();
     } else {
       _closeInputConnectionIfNeeded();
